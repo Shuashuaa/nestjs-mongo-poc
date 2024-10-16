@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
@@ -7,6 +7,7 @@ import { IsString, validateSync } from 'class-validator';
 import { AppController } from './app/app.controller';
 import { AppService } from './app/app.service';
 import { UsersModule } from './users/users.module';
+import { ProductsModule } from './products/products.module';
 import { AuthMiddleware } from './middlewares/auth/auth.middleware';
 
 const envFile = `.env.${process.env.NODE_ENV}`;
@@ -44,12 +45,18 @@ class EnvironmentVariables {
       }),
     }),
     UsersModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
+
 export class AppModule implements NestModule{
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes('*');
+    consumer.apply(AuthMiddleware)
+    // .exclude("/users")
+    // .forRoutes({ path: '*', method: RequestMethod.POST});
+    .forRoutes('*');
+    // consumer.apply(AuthMiddleware).forRoutes({ path: '/users', method: RequestMethod.GET});
   }
 }
