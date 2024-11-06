@@ -342,3 +342,8 @@ You can test the following API endpoints using a tool like **Postman**, **Insomn
   * **Method**: `DELETE`
   * **Response (Success)**: `200 OK` with a confirmation message.
   * **Response (Error)**: `404 Not Found` if the user doesn't exist.
+
+<hr>
+
+### Environment Config
+[ENVMNGMNT.md](ENVMNGMNT.md)
