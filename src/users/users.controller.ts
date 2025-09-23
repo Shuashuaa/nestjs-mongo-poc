@@ -26,4 +26,9 @@ export class UsersController {
         console.log(createUserDto)
         return this.userService.createUser(createUserDto)
     }
+    // users/ (GET)
+    @Get()
+    getUsers(){
+        return this.userService.getUsers();
+    }
 }
