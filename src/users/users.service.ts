@@ -17,4 +17,8 @@ export class UsersService {
     getUsers(){
         return this.userModel.find();
     }
+
+    getUserById(id: string){
+        return this.userModel.findById(id);
+    }
 }
