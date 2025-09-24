@@ -31,4 +31,14 @@ export class UsersController {
     getUsers(){
         return this.userService.getUsers();
     }
+    // users/:id (GET)
+    @Get(':id')
+    async getUserById(@Param('id') id: string){
+        const isValid = mongoose.Types.ObjectId.isValid(id);
+        if (!isValid) throw new HttpException('User not found', 404);
+        const findUser = await this.userService.getUserById(id);
+        if (!findUser) throw new HttpException('User not found', 404);
+        return findUser;
+        // return this.userService.getUserById(id);
+    }
 }
