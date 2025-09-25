@@ -21,78 +21,188 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# NestJS Project with MongoDB 🚀
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This project is a simple demonstration of connecting a NestJS application to a MongoDB database. It uses **Mongoose**, an object data modeling (ODM) library for Node.js, to handle the database interactions and includes a basic **CRUD** (Create, Read, Update, Delete) implementation.
 
-## Project setup
+-----
 
-```bash
-$ npm install
-```
+## 🛠️ Prerequisites
 
-## Compile and run the project
+Before you begin, make sure you have the following tools installed on your machine.
 
-```bash
-# development
-$ npm run start
+  * **Node.js**: The runtime environment for JavaScript.
+  * **npm**: The Node.js package manager.
+  * **MongoDB Community Server & MongoDB Compass**: The database and its graphical user interface (GUI).
+  * You can download them from the official MongoDB website: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
 
-# watch mode
-$ npm run start:dev
+-----
 
-# production mode
-$ npm run start:prod
-```
+## ⚙️ Setup and Installation
 
-## Run tests
+Follow these steps to set up and run the project locally.
 
-```bash
-# unit tests
-$ npm run test
+### 1\. Install NestJS CLI
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+If you haven't already, install the **NestJS Command Line Interface (CLI)** globally. The CLI helps you generate project files and manage your application.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm i -g @nestjs/cli
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 2\. Create the Project
 
-## Resources
+Create a new NestJS project using the CLI. Replace `project-name` with your desired project name.
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+nest new project-name
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 3\. Install Dependencies
 
-## Support
+Navigate into your new project directory and install the necessary packages for database connectivity and validation.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+cd project-name
+npm i @nestjs/mongoose mongoose class-validator class-transformer
+```
 
-## Stay in touch
+  * `@nestjs/mongoose`: The official NestJS module for integrating Mongoose.
+  * `mongoose`: The core Mongoose library.
+  * `class-validator` & `class-transformer`: These libraries are essential for data validation and transformation, a common practice in NestJS applications.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+-----
 
-## License
+## 📦 Database Connection
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project uses a local MongoDB instance. If you don't have one running, follow these steps:
+
+### 1\. Start MongoDB Server
+
+Launch the **MongoDB Community Server** and **MongoDB Compass**. Use Compass to create a new database.
+
+  * Open MongoDB Compass.
+  * Connect to your local server (usually `mongodb://localhost:27017`).
+  * Create a new database named **`my_first_mongodb`**.
+
+### 2\. Configure the Connection
+
+Once the database is created, you need to configure your NestJS application to connect to it.
+
+Open `src/app.module.ts` and add `MongooseModule.forRoot()` to the `imports` array. This line establishes the connection to your MongoDB database.
+
+```typescript
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
+
+@Module({
+  imports: [
+    UsersModule,
+    MongooseModule.forRoot('mongodb://127.0.0.1/my_first_mongodb') // Your database connection URL
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+-----
+
+## ✍️ CRUD Operations
+
+This project includes a basic implementation of a **create** operation for users. Here is the code structure for the user module.
+
+### `src/users/dto/CreateUser.dto.ts`
+
+This **Data Transfer Object (DTO)** defines the shape and validation rules for the data expected in the request body when creating a new user. The **`class-validator`** decorators handle this. `@IsNotEmpty()` ensures the `username` field is not empty, and `@IsOptional()` allows the `displayName` field to be omitted.
+
+```typescript
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+
+export class CreateUserDto {
+    @IsNotEmpty()
+    @IsString()
+    username: string;
+
+    @IsString()
+    @IsOptional()
+    displayName?: string;
+}
+```
+
+### `src/users/users.controller.ts`
+
+This controller handles incoming HTTP requests and delegates them to the `UsersService`. The `@Post()` decorator handles `POST` requests, and `@UsePipes(new ValidationPipe())` ensures that the incoming data is validated using the `CreateUserDto` class.
+
+```typescript
+import { Controller, Post, Body, UsePipes, ValidationPipe } from "@nestjs/common";
+import { UsersService } from "./users.service";
+import { CreateUserDto } from "./dto/CreateUser.dto";
+
+@Controller('users')
+export class UsersController {
+    constructor(private userService: UsersService){}
+
+    @Post()
+    @UsePipes(new ValidationPipe())
+
+    createUser(@Body() createUserDto: CreateUserDto) {
+        console.log(createUserDto)
+        return this.userService.createUser(createUserDto)
+    }
+}
+```
+
+### `src/users/users.service.ts`
+
+This service contains the business logic for creating a new user. `InjectModel(User.name)` injects the Mongoose model, allowing the service to interact with the `users` collection in the database.
+
+```typescript
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { User } from "src/schemas/User.schema";
+import { CreateUserDto } from "./dto/CreateUser.dto";
+
+@Injectable()
+export class UsersService {
+    constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+    createUser(createUserDto: CreateUserDto) {
+        // create a new user instance/document
+        const newUser = new this.userModel(createUserDto)
+        return newUser.save();
+    }
+}
+```
+
+### How to use it?
+
+You can test this endpoint using a tool like Postman or a browser extension.
+
+  * **URL**: `http://localhost:3000/users`
+  * **Method**: `POST`
+  * **Body**: `JSON` with the required user data. The `username` is required, while `displayName` is optional.
+
+Example JSON body:
+
+```json
+{
+  "username": "joshua"
+}
+```
+
+### Response on success
+
+Upon successful creation of a user, the API will return a `201 Created` status code and a JSON response similar to the following. The `_id` and `__v` fields are automatically generated by MongoDB and Mongoose.
+
+```json
+{
+    "username": "joshua",
+    "_id": "68d35c36f7f53b100b2aa5f5",
+    "__v": 0
+}
+```
