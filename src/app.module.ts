@@ -1,15 +1,39 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import { plainToInstance } from 'class-transformer';
+import { IsString, validateSync } from 'class-validator';
 import { AppController } from './app/app.controller';
 import { AppService } from './app/app.service';
 import { UsersModule } from './users/users.module';
+
+const envFile = `.env.${process.env.NODE_ENV || 'dev'}`;
+
+if (!fs.existsSync(envFile)) {
+  throw new Error(`❌ Environment file "${envFile}" not found!`);
+}
+
+class EnvironmentVariables {
+  @IsString()
+  MONGODB_URI: string;
+}
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [`.env.${process.env.NODE_ENV}`],
+      envFilePath: envFile,
+      validate: (config: Record<string, unknown>) => {
+        const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+          enableImplicitConversion: true,
+        });
+        const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+        if (errors.length > 0) {
+          throw new Error(`❌ Invalid environment configuration: ${errors}`);
+        }
+        return validatedConfig;
+      },
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
