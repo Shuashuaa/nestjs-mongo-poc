@@ -22,30 +22,32 @@
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 <br>
 
-# NestJS Project with MongoDB 🚀
+# NestJS RESTful API with MongoDB 🚀
 
-This project is a simple demonstration of connecting a NestJS application to a MongoDB database. It uses **Mongoose**, an object data modeling (ODM) library for Node.js, to handle the database interactions and includes a basic **CRUD** (Create, Read, Update, Delete) implementation.
+This project is a comprehensive demonstration of building a **RESTful API** using **NestJS** and **MongoDB**. It showcases a complete **CRUD** (Create, Read, Update, Delete) implementation for a `users` resource, leveraging **Mongoose** for seamless database interactions and `class-validator` for data validation.
 
 -----
 
 ## 🛠️ Prerequisites
 
-Before you begin, make sure you have the following tools installed on your machine.
+Before you begin, ensure you have the following installed:
 
-  * **Node.js**: The runtime environment for JavaScript.
+  * **Node.js**: The runtime environment.
   * **npm**: The Node.js package manager.
-  * **MongoDB Community Server & MongoDB Compass**: The database and its graphical user interface (GUI).
-  * You can download them from the official MongoDB website: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+  * **MongoDB Community Server**: The database.
+  * **MongoDB Compass**: A user-friendly graphical interface (GUI) for MongoDB.
+
+You can download MongoDB components from the official website: [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community).
 
 -----
 
 ## ⚙️ Setup and Installation
 
-Follow these steps to set up and run the project locally.
+Follow these steps to get the project up and running on your local machine.
 
 ### 1\. Install NestJS CLI
 
-If you haven't already, install the **NestJS Command Line Interface (CLI)** globally. The CLI helps you generate project files and manage your application.
+If not already installed, use npm to install the **NestJS Command Line Interface (CLI)** globally. The CLI simplifies project generation and management.
 
 ```bash
 npm i -g @nestjs/cli
@@ -53,7 +55,7 @@ npm i -g @nestjs/cli
 
 ### 2\. Create the Project
 
-Create a new NestJS project using the CLI. Replace `project-name` with your desired project name.
+Use the NestJS CLI to create a new project. You can replace `project-name` with your desired name.
 
 ```bash
 nest new project-name
@@ -69,28 +71,25 @@ npm i @nestjs/mongoose mongoose class-validator class-transformer
 ```
 
   * `@nestjs/mongoose`: The official NestJS module for integrating Mongoose.
-  * `mongoose`: The core Mongoose library.
-  * `class-validator` & `class-transformer`: These libraries are essential for data validation and transformation, a common practice in NestJS applications.
+  * `mongoose`: The core Mongoose library for MongoDB.
+  * `class-validator` & `class-transformer`: These libraries enable powerful validation and transformation of data, which is crucial for DTOs.
 
 -----
 
 ## 📦 Database Connection
 
-This project uses a local MongoDB instance. If you don't have one running, follow these steps:
+This project connects to a local MongoDB instance.
 
 ### 1\. Start MongoDB Server
 
-Launch the **MongoDB Community Server** and **MongoDB Compass**. Use Compass to create a new database.
+Launch **MongoDB Community Server** and **MongoDB Compass**. Use Compass to create a new database to store your data.
 
-  * Open MongoDB Compass.
-  * Connect to your local server (usually `mongodb://localhost:27017`).
-  * Create a new database named **`my_first_mongodb`**.
+  * Open MongoDB Compass and connect to your local server (the default URL is `mongodb://localhost:27017`).
+  * Create a new database and name it **`my_first_mongodb`**.
 
 ### 2\. Configure the Connection
 
-Once the database is created, you need to configure your NestJS application to connect to it.
-
-Open `src/app.module.ts` and add `MongooseModule.forRoot()` to the `imports` array. This line establishes the connection to your MongoDB database.
+Open your `src/app.module.ts` file and configure the database connection by adding `MongooseModule.forRoot()` to the `imports` array.
 
 ```typescript
 import { Module } from '@nestjs/common';
@@ -114,11 +113,11 @@ export class AppModule {}
 
 ## ✍️ CRUD Operations
 
-This project includes a basic implementation of a **create** operation for users. Here is the code structure for the user module.
+This project provides a complete **CRUD** implementation for a user resource. Here are the key files and their roles.
 
 ### `src/users/dto/CreateUser.dto.ts`
 
-This **Data Transfer Object (DTO)** defines the shape and validation rules for the data expected in the request body when creating a new user. The **`class-validator`** decorators handle this. `@IsNotEmpty()` ensures the `username` field is not empty, and `@IsOptional()` allows the `displayName` field to be omitted.
+This **Data Transfer Object (DTO)** defines the shape and validation rules for creating a user. The `class-validator` decorators ensure data integrity.
 
 ```typescript
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
@@ -134,14 +133,50 @@ export class CreateUserDto {
 }
 ```
 
-### `src/users/users.controller.ts`
+### `src/users/dto/UpdateUser.dto.ts`
 
-This controller handles incoming HTTP requests and delegates them to the `UsersService`. The `@Post()` decorator handles `POST` requests, and `@UsePipes(new ValidationPipe())` ensures that the incoming data is validated using the `CreateUserDto` class.
+This DTO is used for updating a user. By making both fields optional, you can update a single field without providing the other.
 
 ```typescript
-import { Controller, Post, Body, UsePipes, ValidationPipe } from "@nestjs/common";
+import { IsOptional, IsString } from "class-validator";
+
+export class UpdateUserDto {
+    @IsOptional()
+    @IsString()
+    username: string;
+
+    @IsOptional()
+    @IsString()
+    displayName?: string;
+
+    @IsOptional()
+    @IsString()
+    avatarUrl?: string;
+}
+```
+
+### `src/users/users.controller.ts`
+
+This controller handles all incoming HTTP requests for the `/users` resource. It uses decorators like `@Get()`, `@Post()`, `@Patch()`, and `@Delete()` to define the API endpoints. It also includes validation and error handling for invalid user IDs.
+
+```typescript
+import { 
+    Controller, 
+    Get, 
+    Post, 
+    Body, 
+    UsePipes, 
+    ValidationPipe, 
+    Param, 
+    HttpException, 
+    Patch, 
+    Delete,
+    HttpStatus
+} from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/CreateUser.dto";
+import mongoose from "mongoose";
+import { UpdateUserDto } from "./dto/UpdateUser.dto";
 
 @Controller('users')
 export class UsersController {
@@ -149,19 +184,68 @@ export class UsersController {
 
     @Post()
     @UsePipes(new ValidationPipe())
+    async createUser(@Body() createUserDto: CreateUserDto) {
+        const newUser = await this.userService.createUser(createUserDto);
+        return { message: 'User created successfully', user: newUser };
+    }
 
-    createUser(@Body() createUserDto: CreateUserDto) {
-        console.log(createUserDto)
-        return this.userService.createUser(createUserDto)
+    @Get()
+    async getUsers() {
+        const users = await this.userService.getUsers();
+        return { count: users.length, users};
+    }
+
+    @Get(':id')
+    async getUserById(@Param('id') id: string) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+        }
+
+        const user = await this.userService.getUserById(id);
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+
+        return { message: 'User retrieved successfully', user};
+    }
+
+    @Patch(':id')
+    @UsePipes(new ValidationPipe())
+    async updateUserById(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto){
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+        }
+        
+        const updatedUser = await this.userService.updateUser(id, updateUserDto);
+        if (!updatedUser) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+        
+        return { message: 'User successfully updated', user: updatedUser };
+    }
+
+    @Delete(':id')
+    async deleteUser(@Param('id') id: string){
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+        }
+        
+        const deletedUser = await this.userService.deleteUser(id);
+        if (!deletedUser) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+
+        return { message: 'User successfully deleted' };
     }
 }
 ```
 
 ### `src/users/users.service.ts`
 
-This service contains the business logic for creating a new user. `InjectModel(User.name)` injects the Mongoose model, allowing the service to interact with the `users` collection in the database.
+This service contains all the business logic for user management. It interacts with the database using the injected Mongoose `userModel`.
 
 ```typescript
+import { UpdateUserDto } from './dto/UpdateUser.dto';
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -171,41 +255,90 @@ import { CreateUserDto } from "./dto/CreateUser.dto";
 @Injectable()
 export class UsersService {
     constructor(@InjectModel(User.name) private userModel: Model<User>) {}
-
+    
     createUser(createUserDto: CreateUserDto) {
-        // create a new user instance/document
-        const newUser = new this.userModel(createUserDto)
+        const newUser = new this.userModel(createUserDto);
         return newUser.save();
+    }
+
+    getUsers(){
+        return this.userModel.find();
+    }
+
+    getUserById(id: string){
+        return this.userModel.findById(id);
+    }
+
+    updateUser(id: string, UpdateUserDto: UpdateUserDto){
+        return this.userModel.findByIdAndUpdate(id, UpdateUserDto, { new: true});
+    }
+
+    deleteUser(id: string){
+        return this.userModel.findByIdAndDelete(id);
     }
 }
 ```
 
-### How to use it?
+-----
 
-You can test this endpoint using a tool like Postman or a browser extension.
+## 🏃 Running the Project
 
-**Make sure the project is running with `npm run start:dev` before sending the request.**
+To run the application, use the following command in your terminal:
+
+```bash
+npm run start:dev
+```
+
+This will start the development server, which automatically reloads on file changes.
+
+-----
+
+## 💻 API Endpoints
+
+You can test the following API endpoints using a tool like **Postman**, **Insomnia**, or a REST client browser extension.
+
+### Create a User (`POST`)
 
   * **URL**: `http://localhost:3000/users`
   * **Method**: `POST`
-  * **Body**: `JSON` with the required user data. The `username` is required, while `displayName` is optional.
+  * **Body**: `JSON` with `username` (required) and `displayName` (optional).
+    ```json
+    {
+        "username": "joshua",
+        "displayName": "Juswa"
+    }
+    ```
+  * **Response (Success)**: `201 Created` with the new user's data.
 
-Example JSON body:
+### Get All Users (`GET`)
 
-```json
-{
-  "username": "joshua"
-}
-```
+  * **URL**: `http://localhost:3000/users`
+  * **Method**: `GET`
+  * **Response (Success)**: `200 OK` with a list of all users.
 
-### Response on success
+### Get User by ID (`GET`)
 
-Upon successful creation of a user, the API will return a `201 Created` status code and a JSON response similar to the following. The `_id` and `__v` fields are automatically generated by MongoDB and Mongoose.
+  * **URL**: `http://localhost:3000/users/your-user-id`
+  * **Method**: `GET`
+  * **Response (Success)**: `200 OK` with the user's data.
+  * **Response (Error)**: `404 Not Found` if the user doesn't exist.
 
-```json
-{
-    "username": "joshua",
-    "_id": "68d35c36f7f53b100b2aa5f5",
-    "__v": 0
-}
-```
+### Update a User (`PATCH`)
+
+  * **URL**: `http://localhost:3000/users/your-user-id`
+  * **Method**: `PATCH`
+  * **Body**: `JSON` with the fields you want to update.
+    ```json
+    {
+        "displayName": "New Display Name"
+    }
+    ```
+  * **Response (Success)**: `200 OK` with the updated user's data.
+  * **Response (Error)**: `404 Not Found` if the user doesn't exist.
+
+### Delete a User (`DELETE`)
+
+  * **URL**: `http://localhost:3000/users/your-user-id`
+  * **Method**: `DELETE`
+  * **Response (Success)**: `200 OK` with a confirmation message.
+  * **Response (Error)**: `404 Not Found` if the user doesn't exist.
