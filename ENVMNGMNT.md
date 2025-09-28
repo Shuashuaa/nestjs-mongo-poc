@@ -1,4 +1,3 @@
-I will update the documentation to include the full running commands, including the use of `cross-env` for cross-platform compatibility.
 
 -----
 
