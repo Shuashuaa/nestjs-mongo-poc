@@ -28,10 +28,19 @@ This project is a comprehensive demonstration of building a **RESTful API** usin
 
 -----
 
+## ✨ Features
+
+  * **CRUD Operations**: Full **C**reate, **R**ead, **U**pdate, and **D**elete functionality for a `users` resource, following RESTful principles.
+  * **Mongoose Integration**: Utilizes the official `@nestjs/mongoose` module for robust object data modeling with MongoDB.
+  * **Environment Validation Pipeline**: A custom pipeline that validates environment variables (`.env`) at startup, ensuring all required configurations, like `MONGODB_URI`, are correctly formatted and present.
+  * **Middleware**: Implements middleware for tasks like request logging or authorization.
+  * **Nest CLI**: Built from the ground up using the NestJS Command Line Interface, streamlining development and boilerplate code generation.
+
+<hr>
+
 ## 🛠️ Prerequisites
 
 Before you begin, ensure you have the following installed:
-
   * **Node.js**: The runtime environment.
   * **npm**: The Node.js package manager.
   * **MongoDB Community Server**: The database.
@@ -70,9 +79,9 @@ cd project-name
 npm i @nestjs/mongoose mongoose class-validator class-transformer
 ```
 
-  * `@nestjs/mongoose`: The official NestJS module for integrating Mongoose.
-  * `mongoose`: The core Mongoose library for MongoDB.
-  * `class-validator` & `class-transformer`: These libraries enable powerful validation and transformation of data, which is crucial for DTOs.
+  \* `@nestjs/mongoose`: The official NestJS module for integrating Mongoose.
+  \* `mongoose`: The core Mongoose library for MongoDB.
+  \* `class-validator` & `class-transformer`: These libraries enable powerful validation and transformation of data, which is crucial for DTOs.
 
 -----
 
@@ -84,8 +93,8 @@ This project connects to a local MongoDB instance.
 
 Launch **MongoDB Community Server** and **MongoDB Compass**. Use Compass to create a new database to store your data.
 
-  * Open MongoDB Compass and connect to your local server (the default URL is `mongodb://localhost:27017`).
-  * Create a new database and name it **`my_first_mongodb`**.
+  \* Open MongoDB Compass and connect to your local server (the default URL is `mongodb://localhost:27017`).
+  \* Create a new database and name it **`my_first_mongodb`**.
 
 ### 2\. Configure the Connection
 
@@ -99,12 +108,12 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [
-    UsersModule,
-    MongooseModule.forRoot('mongodb://127.0.0.1/my_first_mongodb') // Your database connection URL
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    UsersModule,
+    MongooseModule.forRoot('mongodb://127.0.0.1/my_first_mongodb') // Your database connection URL
+  ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
 ```
@@ -123,13 +132,13 @@ This **Data Transfer Object (DTO)** defines the shape and validation rules for c
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateUserDto {
-    @IsNotEmpty()
-    @IsString()
-    username: string;
+    @IsNotEmpty()
+    @IsString()
+    username: string;
 
-    @IsString()
-    @IsOptional()
-    displayName?: string;
+    @IsString()
+    @IsOptional()
+    displayName?: string;
 }
 ```
 
@@ -141,17 +150,17 @@ This DTO is used for updating a user. By making both fields optional, you can up
 import { IsOptional, IsString } from "class-validator";
 
 export class UpdateUserDto {
-    @IsOptional()
-    @IsString()
-    username: string;
+    @IsOptional()
+    @IsString()
+    username: string;
 
-    @IsOptional()
-    @IsString()
-    displayName?: string;
+    @IsOptional()
+    @IsString()
+    displayName?: string;
 
-    @IsOptional()
-    @IsString()
-    avatarUrl?: string;
+    @IsOptional()
+    @IsString()
+    avatarUrl?: string;
 }
 ```
 
@@ -161,17 +170,17 @@ This controller handles all incoming HTTP requests for the `/users` resource. It
 
 ```typescript
 import { 
-    Controller, 
-    Get, 
-    Post, 
-    Body, 
-    UsePipes, 
-    ValidationPipe, 
-    Param, 
-    HttpException, 
-    Patch, 
-    Delete,
-    HttpStatus
+    Controller, 
+    Get, 
+    Post, 
+    Body, 
+    UsePipes, 
+    ValidationPipe, 
+    Param, 
+    HttpException, 
+    Patch, 
+    Delete,
+    HttpStatus
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/CreateUser.dto";
@@ -180,63 +189,63 @@ import { UpdateUserDto } from "./dto/UpdateUser.dto";
 
 @Controller('users')
 export class UsersController {
-    constructor(private userService: UsersService){}
+    constructor(private userService: UsersService){}
 
-    @Post()
-    @UsePipes(new ValidationPipe())
-    async createUser(@Body() createUserDto: CreateUserDto) {
-        const newUser = await this.userService.createUser(createUserDto);
-        return { message: 'User created successfully', user: newUser };
-    }
+    @Post()
+    @UsePipes(new ValidationPipe())
+    async createUser(@Body() createUserDto: CreateUserDto) {
+        const newUser = await this.userService.createUser(createUserDto);
+        return { message: 'User created successfully', user: newUser };
+    }
 
-    @Get()
-    async getUsers() {
-        const users = await this.userService.getUsers();
-        return { count: users.length, users};
-    }
+    @Get()
+    async getUsers() {
+        const users = await this.userService.getUsers();
+        return { count: users.length, users};
+    }
 
-    @Get(':id')
-    async getUserById(@Param('id') id: string) {
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
-        }
+    @Get(':id')
+    async getUserById(@Param('id') id: string) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+        }
 
-        const user = await this.userService.getUserById(id);
-        if (!user) {
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-        }
+        const user = await this.userService.getUserById(id);
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
 
-        return { message: 'User retrieved successfully', user};
-    }
+        return { message: 'User retrieved successfully', user};
+    }
 
-    @Patch(':id')
-    @UsePipes(new ValidationPipe())
-    async updateUserById(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto){
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
-        }
-        
-        const updatedUser = await this.userService.updateUser(id, updateUserDto);
-        if (!updatedUser) {
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-        }
-        
-        return { message: 'User successfully updated', user: updatedUser };
-    }
+    @Patch(':id')
+    @UsePipes(new ValidationPipe())
+    async updateUserById(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto){
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+        }
+        
+        const updatedUser = await this.userService.updateUser(id, updateUserDto);
+        if (!updatedUser) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+        
+        return { message: 'User successfully updated', user: updatedUser };
+    }
 
-    @Delete(':id')
-    async deleteUser(@Param('id') id: string){
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
-        }
-        
-        const deletedUser = await this.userService.deleteUser(id);
-        if (!deletedUser) {
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-        }
+    @Delete(':id')
+    async deleteUser(@Param('id') id: string){
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new HttpException('Invalid ID format', HttpStatus.BAD_REQUEST);
+        }
+        
+        const deletedUser = await this.userService.deleteUser(id);
+        if (!deletedUser) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
 
-        return { message: 'User successfully deleted' };
-    }
+        return { message: 'User successfully deleted' };
+    }
 }
 ```
 
@@ -254,28 +263,28 @@ import { CreateUserDto } from "./dto/CreateUser.dto";
 
 @Injectable()
 export class UsersService {
-    constructor(@InjectModel(User.name) private userModel: Model<User>) {}
-    
-    createUser(createUserDto: CreateUserDto) {
-        const newUser = new this.userModel(createUserDto);
-        return newUser.save();
-    }
+    constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+    
+    createUser(createUserDto: CreateUserDto) {
+        const newUser = new this.userModel(createUserDto);
+        return newUser.save();
+    }
 
-    getUsers(){
-        return this.userModel.find();
-    }
+    getUsers(){
+        return this.userModel.find();
+    }
 
-    getUserById(id: string){
-        return this.userModel.findById(id);
-    }
+    getUserById(id: string){
+        return this.userModel.findById(id);
+    }
 
-    updateUser(id: string, UpdateUserDto: UpdateUserDto){
-        return this.userModel.findByIdAndUpdate(id, UpdateUserDto, { new: true});
-    }
+    updateUser(id: string, UpdateUserDto: UpdateUserDto){
+        return this.userModel.findByIdAndUpdate(id, UpdateUserDto, { new: true});
+    }
 
-    deleteUser(id: string){
-        return this.userModel.findByIdAndDelete(id);
-    }
+    deleteUser(id: string){
+        return this.userModel.findByIdAndDelete(id);
+    }
 }
 ```
 
@@ -297,17 +306,31 @@ This will start the development server, which automatically reloads on file chan
 
 You can test the following API endpoints using a tool like **Postman**, **Insomnia**, or a REST client browser extension.
 
+I can definitely fix that for you. The code blocks for the JSON bodies were not formatted correctly. Here's the corrected and properly formatted section for the `README.md` file.
+
+<br>
+
+-----
+
+### 💻 API Endpoints
+
+You can test the following API endpoints using a tool like **Postman**, **Insomnia**, or a REST client browser extension.
+
 ### Create a User (`POST`)
 
   * **URL**: `http://localhost:3000/users`
+
   * **Method**: `POST`
+
   * **Body**: `JSON` with `username` (required) and `displayName` (optional).
+
     ```json
     {
         "username": "joshua",
         "displayName": "Juswa"
     }
     ```
+
   * **Response (Success)**: `201 Created` with the new user's data.
 
 ### Get All Users (`GET`)
@@ -326,14 +349,19 @@ You can test the following API endpoints using a tool like **Postman**, **Insomn
 ### Update a User (`PATCH`)
 
   * **URL**: `http://localhost:3000/users/your-user-id`
+
   * **Method**: `PATCH`
+
   * **Body**: `JSON` with the fields you want to update.
+
     ```json
     {
         "displayName": "New Display Name"
     }
     ```
+
   * **Response (Success)**: `200 OK` with the updated user's data.
+
   * **Response (Error)**: `404 Not Found` if the user doesn't exist.
 
 ### Delete a User (`DELETE`)
@@ -343,7 +371,6 @@ You can test the following API endpoints using a tool like **Postman**, **Insomn
   * **Response (Success)**: `200 OK` with a confirmation message.
   * **Response (Error)**: `404 Not Found` if the user doesn't exist.
 
-<hr>
-
 ### Environment Config
-[ENVMNGMNT.md](ENVMNGMNT.md)
+
+[ENVMNGMNT.md](https://www.google.com/search?q=ENVMNGMNT.md)
