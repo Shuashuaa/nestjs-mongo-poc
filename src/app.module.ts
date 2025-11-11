@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
@@ -7,8 +7,9 @@ import { IsString, validateSync } from 'class-validator';
 import { AppController } from './app/app.controller';
 import { AppService } from './app/app.service';
 import { UsersModule } from './users/users.module';
+import { AuthMiddleware } from './middlewares/auth/auth.middleware';
 
-const envFile = `.env.${process.env.NODE_ENV || 'dev'}`;
+const envFile = `.env.${process.env.NODE_ENV}`;
 
 if (!fs.existsSync(envFile)) {
   throw new Error(`❌ Environment file "${envFile}" not found!`);
@@ -47,4 +48,8 @@ class EnvironmentVariables {
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule{
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes('*');
+  }
+}
